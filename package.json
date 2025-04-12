@@ -1,0 +1,12 @@
+{
+  "name": "net.32ba.git-tool",
+  "displayName": "Git Tool",
+  "version": "0.0.1",
+  "unity": "2022.3",
+  "description": "A tool for managing Git operations.",
+  "vrchatVersion": "2022.1.1",
+  "author": {
+    "name": "32ba",
+    "url": "https://github.com/32ba"
+  }
+}
