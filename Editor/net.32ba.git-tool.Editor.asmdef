@@ -1,0 +1,12 @@
+{
+  "name": "net.32ba.git-tool.Editor",
+  "references": [
+    "UnityEditor",
+    "UnityEngine",
+    "UnityEditor.SceneManagement",
+    "UnityEngine.SceneManagement"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}
