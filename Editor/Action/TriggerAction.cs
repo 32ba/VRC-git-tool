@@ -15,14 +15,14 @@ public class TriggerAction
             Name = "On Scene Save",
             PrefKey = "GitTool_TriggerOnSceneSave",
             TemplateKey = "GitTool_SceneSaveMessageTemplate",
-            DefaultTemplate = "Auto-commit: {action} - {sceneName}"
+            DefaultTemplate = "Auto-commit: Scene saved - {sceneName}"
         },
         new TriggerAction
         {
             Name = "On Build Complete",
             PrefKey = "GitTool_TriggerOnBuildComplete",
             TemplateKey = "GitTool_BuildCompleteMessageTemplate",
-            DefaultTemplate = "Auto-commit: {action}"
+            DefaultTemplate = "Auto-commit: Build completed"
         }
     };
 }

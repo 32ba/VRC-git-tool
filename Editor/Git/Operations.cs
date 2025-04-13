@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Threading.Tasks;
 
-public static class GitToolOperations
+public static class GitOperations
 {
   public static async Task<(string output, string error, bool success)> StatusAsync(string repositoryPath)
   {
