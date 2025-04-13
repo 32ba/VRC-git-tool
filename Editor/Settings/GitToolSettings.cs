@@ -47,7 +47,7 @@ public class GitToolSettings : EditorWindow
         GUILayout.Label("Git is not installed. Please install Git to use this tool.", EditorStyles.boldLabel);
         if (GUILayout.Button("Download Git"))
         {
-          Application.OpenURL("https://git-scm.com/");
+          Application.OpenURL("https://git-scm.com/downloads");
         }
       }
       else if (GUILayout.Button("Initialize Git Repository"))
