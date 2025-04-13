@@ -5,10 +5,8 @@ using System.Collections.Generic;
 public class GitToolSettings : EditorWindow
 {
   private string gitRepositoryPath = "";
-  private string commitMessageTemplate = "Auto-commit: {action}";
   private bool autoPushEnabled = false;
   private string remoteName = "origin";
-  private Dictionary<string, bool> actionFoldouts = new Dictionary<string, bool>();
 
   [MenuItem("Tools/Git Tool Settings")]
   public static void ShowWindow()
@@ -65,14 +63,6 @@ public class GitToolSettings : EditorWindow
       }
     }
 
-    // Commit message templates
-    GUILayout.Space(10);
-    GUILayout.Label("Commit Message Templates", EditorStyles.boldLabel);
-
-    // Default template
-    commitMessageTemplate = EditorGUILayout.TextField("Default Template", commitMessageTemplate);
-
-
     // Auto Push settings
     GUILayout.Space(10);
     GUILayout.Label("Auto Push Settings", EditorStyles.boldLabel);
@@ -94,36 +84,10 @@ public class GitToolSettings : EditorWindow
 
       if (isEnabled)
       {
-        // Initialize foldout state if needed
-        if (!actionFoldouts.ContainsKey(action.PrefKey))
-        {
-          actionFoldouts[action.PrefKey] = false;
-        }
-
-        // Draw foldout header
-        bool foldoutState = actionFoldouts[action.PrefKey];
-        foldoutState = EditorGUILayout.BeginFoldoutHeaderGroup(foldoutState, $"{action.Name} Settings");
-        actionFoldouts[action.PrefKey] = foldoutState;
-
-        if (foldoutState)
-        {
-          EditorGUI.indentLevel++;
-
-          bool overrideTemplate = EditorPrefs.GetBool(action.OverrideTemplateKey, false);
-          overrideTemplate = EditorGUILayout.Toggle("Override Template", overrideTemplate);
-          EditorPrefs.SetBool(action.OverrideTemplateKey, overrideTemplate);
-
-          if (overrideTemplate)
-          {
-            string template = EditorPrefs.GetString(action.TemplateKey, action.DefaultTemplate);
-            template = EditorGUILayout.TextField("Template", template);
-            EditorPrefs.SetString(action.TemplateKey, template);
-          }
-
-          EditorGUI.indentLevel--;
-        }
-        EditorGUILayout.EndFoldoutHeaderGroup();
+        string template = EditorPrefs.GetString(action.TemplateKey, action.DefaultTemplate);
+        template = EditorGUILayout.TextField("Commit message template", template);
       }
+      GUILayout.Space(5);
     }
 
     // Save button
@@ -136,19 +100,19 @@ public class GitToolSettings : EditorWindow
   private void SaveSettings()
   {
     EditorPrefs.SetString("GitTool_RepositoryPath", gitRepositoryPath);
-    EditorPrefs.SetString("GitTool_CommitMessageTemplate", commitMessageTemplate);
     EditorPrefs.SetBool("GitTool_AutoPushEnabled", autoPushEnabled);
     EditorPrefs.SetString("GitTool_RemoteName", remoteName);
 
     // Save trigger action settings
     foreach (var action in TriggerAction.Actions)
     {
-      // Note: The enabled state and override settings are saved directly in OnGUI
-      // Only save the template string if override is enabled
-      if (EditorPrefs.GetBool(action.OverrideTemplateKey, false))
+      bool isEnabled = EditorPrefs.GetBool(action.PrefKey, true);
+      EditorPrefs.SetBool(action.PrefKey, isEnabled);
+
+      if (isEnabled)
       {
-        // The template string is also saved directly in OnGUI,
-        // but we could potentially move that logic here if needed.
+        string template = EditorPrefs.GetString(action.TemplateKey, action.DefaultTemplate);
+        EditorPrefs.SetString(action.TemplateKey, template);
       }
     }
 
@@ -159,11 +123,7 @@ public class GitToolSettings : EditorWindow
   {
     // Load settings
     gitRepositoryPath = EditorPrefs.GetString("GitTool_RepositoryPath", "");
-    commitMessageTemplate = EditorPrefs.GetString("GitTool_CommitMessageTemplate", "Auto-commit: {action}");
     autoPushEnabled = EditorPrefs.GetBool("GitTool_AutoPushEnabled", false);
     remoteName = EditorPrefs.GetString("GitTool_RemoteName", "origin");
-
-    // Initialize foldout dictionary
-    actionFoldouts = new Dictionary<string, bool>();
   }
 }

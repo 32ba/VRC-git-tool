@@ -64,7 +64,13 @@ public static class GitToolHandler
     if (!commitSuccess)
     {
       Debug.LogError($"Git Tool: Commit failed: {commitError}");
+      return;
     }
+    else
+    {
+      Debug.Log("Git Tool: Commit completed successfully.");
+    }
+
 
     if (EditorPrefs.GetBool("GitTool_AutoPushEnabled", false))
     {
@@ -75,60 +81,16 @@ public static class GitToolHandler
       {
         Debug.LogError($"Git Tool: Push failed: {pushError}");
       }
-
-      if (commitSuccess && pushSuccess)
-      {
-        Debug.Log("Git Tool: Commit and Push completed successfully.");
-      }
-      else if (commitSuccess)
-      {
-        Debug.Log("Git Tool: Commit completed successfully.");
-      }
       else
       {
-        Debug.LogError($"Git Tool: Commit failed: {commitError}");
-      }
-    }
-    else
-    {
-      if (commitSuccess)
-      {
-        Debug.Log("Git Tool: Commit completed successfully.");
-      }
-      else
-      {
-        Debug.LogError($"Git Tool: Commit failed: {commitError}");
+        Debug.Log("Git Tool: Push completed successfully.");
       }
     }
   }
 
-  private static string GetCommitMessageForAction(string actionName, Scene scene = default)
+  private static string GetCommitMessageForAction(string actionName, Scene scene)
   {
-    TriggerAction action = TriggerAction.Actions.Find(a => a.Name == actionName);
-    if (action == null)
-    {
-      Debug.LogError($"Trigger action '{actionName}' not found.");
-      return null;
-    }
-
-    string template;
-    if (EditorPrefs.GetBool(action.OverrideTemplateKey, false))
-    {
-      template = EditorPrefs.GetString(action.TemplateKey, action.DefaultTemplate);
-    }
-    else
-    {
-      template = EditorPrefs.GetString("GitTool_CommitMessageTemplate", action.DefaultTemplate);
-    }
-
-    string actionDescription = "";
-    if (actionName == "On Scene Save" && scene != default)
-    {
-      actionDescription = $"Scene saved - \"{scene.name}\"";
-    }
-    // Add other action descriptions here (e.g., for build complete)
-    // else if (actionName == "On Build Complete" && report != null) { ... }
-
-    return template.Replace("{action}", actionDescription);
+    string template = EditorPrefs.GetString($"GitTool_{actionName}MessageTemplate", "Auto-commit: {action} - {sceneName}");
+    return template.Replace("{action}", actionName).Replace("{sceneName}", scene.name);
   }
 }
