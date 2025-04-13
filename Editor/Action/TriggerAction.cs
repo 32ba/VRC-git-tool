@@ -1,28 +1,52 @@
 using UnityEngine;
 using System.Collections.Generic;
+using GitTool.Editor.Action;
+using UnityEditor;
+using System.Linq;
 
 public class TriggerAction
 {
-    public string Name { get; set; }
-    public string PrefKey { get; set; }
-    public string TemplateKey { get; set; }
-    public string DefaultTemplate { get; set; }
+    public static List<TriggerActionDefinition> Actions { get; private set; }
 
-    public static readonly List<TriggerAction> Actions = new List<TriggerAction>
+    static TriggerAction()
     {
-        new TriggerAction
+        LoadActions();
+    }
+
+    private static void LoadActions()
+    {
+        // Load all TriggerActionDefinitions from Resources/TriggerActions
+        TriggerActionDefinition[] loadedActions = Resources.LoadAll<TriggerActionDefinition>("TriggerActions");
+
+        if (loadedActions != null && loadedActions.Length > 0)
         {
-            Name = "On Scene Save",
-            PrefKey = "GitTool_TriggerOnSceneSave",
-            TemplateKey = "GitTool_SceneSaveMessageTemplate",
-            DefaultTemplate = "Auto-commit: Scene saved - {sceneName}"
-        },
-        new TriggerAction
-        {
-            Name = "On Build Complete",
-            PrefKey = "GitTool_TriggerOnBuildComplete",
-            TemplateKey = "GitTool_BuildCompleteMessageTemplate",
-            DefaultTemplate = "Auto-commit: Build completed"
+            Actions = loadedActions.ToList();
         }
-    };
+        else
+        {
+            Debug.LogWarning("Git Tool: No TriggerActionDefinitions found in Resources/TriggerActions. Using default actions.");
+            // Fallback to hardcoded defaults if no ScriptableObjects are found
+            Actions = new List<TriggerActionDefinition>
+            {
+                CreateDefaultAction("On Scene Save", "GitTool_TriggerOnSceneSave", "GitTool_SceneSaveMessageTemplate", "Auto-commit: Scene saved - {sceneName}"),
+                CreateDefaultAction("On Build Complete", "GitTool_TriggerOnBuildComplete", "GitTool_BuildCompleteMessageTemplate", "Auto-commit: Build completed")
+            };
+        }
+    }
+
+    private static TriggerActionDefinition CreateDefaultAction(string name, string prefKey, string templateKey, string defaultTemplate)
+    {
+        TriggerActionDefinition action = ScriptableObject.CreateInstance<TriggerActionDefinition>();
+        action.ActionName = name;
+        action.PreferenceKey = prefKey;
+        action.TemplatePreferenceKey = templateKey;
+        action.DefaultTemplate = defaultTemplate;
+        return action;
+    }
+
+    [MenuItem("Tools/Git Tool/Reload Trigger Actions")]
+    public static void ReloadActions()
+    {
+        LoadActions();
+    }
 }

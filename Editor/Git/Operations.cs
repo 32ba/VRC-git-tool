@@ -1,4 +1,3 @@
-using UnityEngine;
 using System.Threading.Tasks;
 
 public static class GitOperations
@@ -6,54 +5,42 @@ public static class GitOperations
   public static async Task<(string output, string error, bool success)> StatusAsync(string repositoryPath)
   {
     string statusArgs = "status";
-    return await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, statusArgs);
+    var result = await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, statusArgs);
+    return (result.output, result.error, result.exitCode == 0);
   }
 
   public static async Task<(string output, string error, bool success)> AddAsync(string repositoryPath)
   {
-    string addArgs = "add .";
-    return await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, addArgs);
+    string addArgs = "add ."; // Consider adding specific files instead of '.' for more control
+    var result = await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, addArgs);
+    return (result.output, result.error, result.exitCode == 0);
   }
 
   public static async Task<(string output, string error, bool success)> CommitAsync(string repositoryPath, string commitMessage)
   {
-    string commitArgs = $"commit -m \"{commitMessage}\"";
-    return await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, commitArgs);
+    // Ensure commit message is properly escaped for the command line
+    // Simple escaping for quotes, might need more robust solution for complex messages
+    string escapedMessage = commitMessage.Replace("\"", "\\\"");
+    string commitArgs = $"commit -m \"{escapedMessage}\"";
+    var result = await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, commitArgs);
+    return (result.output, result.error, result.exitCode == 0);
   }
 
   public static async Task<(string output, string error, bool success)> PushAsync(string repositoryPath, string remoteName)
   {
-    string pushArgs = $"push {remoteName}";
-    return await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, pushArgs);
+    // Ensure remote name is valid before using
+    string pushArgs = $"push {remoteName}"; // Consider adding branch name: `push {remoteName} current-branch`
+    var result = await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, pushArgs);
+    return (result.output, result.error, result.exitCode == 0);
   }
 
-  public static bool Init(string repositoryPath, out string output, out string error)
+  public static async Task<(string output, string error, bool success)> InitAsync(string repositoryPath)
   {
     string initArgs = "init";
-    return GitCommandHandler.ExecuteGitCommand(repositoryPath, initArgs, out output, out error);
+    var result = await GitCommandHandler.ExecuteGitCommandAsync(repositoryPath, initArgs);
+    return (result.output, result.error, result.exitCode == 0);
   }
 
-  public static bool Add(string repositoryPath, out string output, out string error)
-  {
-    var result = AddAsync(repositoryPath).Result;
-    output = result.output;
-    error = result.error;
-    return result.success;
-  }
-
-  public static bool Commit(string repositoryPath, string commitMessage, out string output, out string error)
-  {
-    var result = CommitAsync(repositoryPath, commitMessage).Result;
-    output = result.output;
-    error = result.error;
-    return result.success;
-  }
-
-  public static bool Push(string repositoryPath, string remoteName, out string output, out string error)
-  {
-    var result = PushAsync(repositoryPath, remoteName).Result;
-    output = result.output;
-    error = result.error;
-    return result.success;
-  }
+  // Synchronous methods removed as they block the main thread and are unsafe in Unity Editor context.
+  // Callers should be updated to use the Async versions.
 }

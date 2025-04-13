@@ -9,6 +9,7 @@ public class GitToolSettingsUI : EditorWindow
   private string _guiGitRepositoryPath = "";
   private bool _guiAutoPushEnabled = false;
   private string _guiRemoteName = "origin";
+  private bool _isRepositoryPathValid = false; // Track repository path validity
 
   // Trigger action states are read/written directly in OnGUI
 
@@ -20,6 +21,7 @@ public class GitToolSettingsUI : EditorWindow
   private void OnEnable()
   {
     LoadSettingsForGUI();
+    ValidateRepositoryPath(); // Validate on enable
   }
 
   private void LoadSettingsForGUI()
@@ -41,6 +43,7 @@ public class GitToolSettingsUI : EditorWindow
     if (EditorGUI.EndChangeCheck())
     {
       GitToolSettings.RepositoryPath = _guiGitRepositoryPath;
+      ValidateRepositoryPath(); // Validate on text field change
     }
 
     if (GUILayout.Button("Set Repository Path"))
@@ -50,41 +53,29 @@ public class GitToolSettingsUI : EditorWindow
       {
         _guiGitRepositoryPath = selectedPath;
         GitToolSettings.RepositoryPath = _guiGitRepositoryPath;
+        ValidateRepositoryPath(); // Validate on folder selection
       }
     }
 
-    if (!string.IsNullOrEmpty(_guiGitRepositoryPath))
-    {
-      try
-      {
-        if (!Directory.Exists(Path.Combine(_guiGitRepositoryPath, ".git")))
-        {
-          GUILayout.Space(5);
-          if (!GitCommandHandler.IsGitInstalled())
-          {
-            EditorGUILayout.HelpBox("Git is not installed. Please install Git to use this tool.", MessageType.Warning);
-            if (GUILayout.Button("Download Git"))
-            {
-              Application.OpenURL("https://git-scm.com/downloads");
-            }
-          }
-          else if (GUILayout.Button("Initialize Git Repository"))
-          {
-            GitOperations.Init(_guiGitRepositoryPath, out string initOutput, out string initError);
-            if (string.IsNullOrEmpty(initError)) { Debug.Log("Git repository initialized successfully."); }
-            else { Debug.LogError($"Failed to initialize Git repository: {initError}"); }
-          }
-        }
-      }
-      catch (System.Exception ex)
-      {
-        EditorGUILayout.HelpBox($"Error checking repository path: {ex.Message}", MessageType.Error);
-      }
-    }
-    else
+    // Display repository status based on validation
+    GUILayout.Space(5);
+    if (string.IsNullOrEmpty(_guiGitRepositoryPath))
     {
       EditorGUILayout.HelpBox("Repository path is not set.", MessageType.Info);
     }
+    else if (!_isRepositoryPathValid)
+    {
+      EditorGUILayout.HelpBox("Repository path is invalid or not a Git repository.", MessageType.Warning);
+    }
+
+    // Disable "Initialize Git Repository" button if the path is invalid
+    EditorGUI.BeginDisabledGroup(_isRepositoryPathValid);
+    if (GUILayout.Button("Initialize Git Repository"))
+    {
+      // Execute async operation without awaiting in OnGUI
+      InitializeGitRepositoryAsync(_guiGitRepositoryPath);
+    }
+    EditorGUI.EndDisabledGroup();
 
     // --- Auto Push Settings ---
     GUILayout.Space(10);
@@ -110,42 +101,39 @@ public class GitToolSettingsUI : EditorWindow
     GUILayout.Space(10);
     GUILayout.Label("Trigger Actions", EditorStyles.boldLabel);
 
-    // Assuming TriggerAction class and Actions list exist and are accessible
+    // Load and display trigger actions from ScriptableObjects
     if (TriggerAction.Actions != null)
     {
       foreach (var action in TriggerAction.Actions)
       {
-        // Check for null action or keys before proceeding
-        if (action == null || string.IsNullOrEmpty(action.PrefKey) || string.IsNullOrEmpty(action.TemplateKey))
+        // Ensure action is not null
+        if (action == null)
         {
-          EditorGUILayout.HelpBox("Invalid TriggerAction detected.", MessageType.Warning);
+          EditorGUILayout.HelpBox("Invalid TriggerAction detected (null).", MessageType.Warning);
           continue;
         }
 
-        string isEnabledKey = GitToolSettings.GetTriggerActionEnabledKey(action.PrefKey);
-        string templateKey = GitToolSettings.GetTriggerActionTemplateKey(action.TemplateKey);
-
         EditorGUI.BeginChangeCheck();
-        // Read directly from EditorPrefs for the toggle's current state
-        bool isEnabled = GitToolSettings.IsTriggerActionEnabled(isEnabledKey); // Default to true
-        isEnabled = EditorGUILayout.Toggle(action.Name, isEnabled);
+        // Use the action's properties directly
+        bool isEnabled = EditorPrefs.GetBool(action.GetEnabledEditorPrefsKey(), false); // Default to false
+        isEnabled = EditorGUILayout.Toggle(action.ActionName, isEnabled);
         if (EditorGUI.EndChangeCheck())
         {
-          // Save change directly to EditorPrefs
-          GitToolSettings.SetTriggerActionEnabled(isEnabledKey, isEnabled);
+          // Save change directly to EditorPrefs using the action's key
+          EditorPrefs.SetBool(action.GetEnabledEditorPrefsKey(), isEnabled);
         }
 
-        // Use the *just updated* value from EditorPrefs to decide whether to show the template field
-        if (GitToolSettings.IsTriggerActionEnabled(isEnabledKey))
+        // Show template field only if the action is enabled
+        if (EditorPrefs.GetBool(action.GetEnabledEditorPrefsKey(), false))
         {
           EditorGUI.BeginChangeCheck();
-          // Read directly from EditorPrefs for the template field's current state
-          string template = GitToolSettings.GetTriggerActionTemplate(templateKey, action.DefaultTemplate);
+          // Get the template from EditorPrefs
+          string template = EditorPrefs.GetString(action.GetTemplateEditorPrefsKey(), action.DefaultTemplate);
           template = EditorGUILayout.TextField("Commit message template", template);
           if (EditorGUI.EndChangeCheck())
           {
-            // Save change directly to EditorPrefs
-            GitToolSettings.SetTriggerActionTemplate(templateKey, template);
+            // Save the template to EditorPrefs
+            EditorPrefs.SetString(action.GetTemplateEditorPrefsKey(), template);
           }
         }
         GUILayout.Space(5);
@@ -154,6 +142,49 @@ public class GitToolSettingsUI : EditorWindow
     else
     {
       EditorGUILayout.HelpBox("TriggerAction.Actions list is not available.", MessageType.Warning);
+    }
+  }
+
+  private async void InitializeGitRepositoryAsync(string path)
+  {
+    if (string.IsNullOrEmpty(path))
+    {
+      Debug.LogError("Repository path is empty.");
+      return;
+    }
+
+    Debug.Log($"Attempting to initialize Git repository at: {path}");
+    var (output, error, success) = await GitOperations.InitAsync(path);
+
+    if (success)
+    {
+      Debug.Log($"Git repository initialized successfully.\nOutput:\n{output}");
+      // Optionally force UI repaint or update state if needed
+      Repaint();
+    }
+    else
+    {
+      Debug.LogError($"Failed to initialize Git repository: {error}\nOutput:\n{output}");
+      //EditorUtility.DisplayDialog("Git Init Error", $"Failed to initialize Git repository.\n\nError:\n{error}\n\nOutput:\n{output}", "OK");
+    }
+  }
+
+  // Validate repository path and update the _isRepositoryPathValid flag
+  private void ValidateRepositoryPath()
+  {
+    _isRepositoryPathValid = false; // Assume invalid until proven otherwise
+
+    if (!string.IsNullOrEmpty(_guiGitRepositoryPath))
+    {
+      try
+      {
+        _isRepositoryPathValid = Directory.Exists(Path.Combine(_guiGitRepositoryPath, ".git"));
+      }
+      catch (System.Exception)
+      {
+        // Handle exceptions during path validation (e.g., invalid characters)
+        _isRepositoryPathValid = false;
+      }
     }
   }
 }
