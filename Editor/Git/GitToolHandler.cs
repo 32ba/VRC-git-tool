@@ -90,7 +90,8 @@ public static class GitToolHandler
 
   private static string GetCommitMessageForAction(string actionName, Scene scene)
   {
-    string template = EditorPrefs.GetString($"GitTool_{actionName}MessageTemplate", "Auto-commit: {action} - {sceneName}");
-    return template.Replace("{action}", actionName).Replace("{sceneName}", scene.name);
+    string template = EditorPrefs.GetString($"GitTool_{actionName}MessageTemplate", "Auto-commit: {action}");
+    template = template.Replace("{action}", actionName).Replace("{sceneName}", scene.name);
+    return template;
   }
 }

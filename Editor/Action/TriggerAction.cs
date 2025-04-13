@@ -22,7 +22,7 @@ public class TriggerAction
             Name = "On Build Complete",
             PrefKey = "GitTool_TriggerOnBuildComplete",
             TemplateKey = "GitTool_BuildCompleteMessageTemplate",
-            DefaultTemplate = "Auto-commit: {action} - {buildName}"
+            DefaultTemplate = "Auto-commit: {action}"
         }
     };
 }
