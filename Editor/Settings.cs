@@ -3,7 +3,7 @@ using UnityEngine;
 
 public static class GitToolSettings
 {
-  // EditorPrefs Keys
+  // PlayerPrefs Keys
   private const string GitRepositoryPathKey = "GitTool_RepositoryPath";
   private const string AutoPushEnabledKey = "GitTool_AutoPushEnabled";
   private const string RemoteNameKey = "GitTool_RemoteName";
@@ -11,22 +11,22 @@ public static class GitToolSettings
   private const string TriggerActionTemplateKeyPrefix = "GitTool_TriggerActionTemplate_";
 
   // Public static properties to access settings from other classes
-  public static string RepositoryPath { get => EditorPrefs.GetString(GitRepositoryPathKey, ""); set => EditorPrefs.SetString(GitRepositoryPathKey, value); }
-  public static bool IsAutoPushEnabled { get => EditorPrefs.GetBool(AutoPushEnabledKey, false); set => EditorPrefs.SetBool(AutoPushEnabledKey, value); }
-  public static string PushRemoteName { get => EditorPrefs.GetString(RemoteNameKey, "origin"); set => EditorPrefs.SetString(RemoteNameKey, value); }
+  public static string RepositoryPath { get => PlayerPrefs.GetString(GitRepositoryPathKey, ""); set => PlayerPrefs.SetString(GitRepositoryPathKey, value); }
+  public static bool IsAutoPushEnabled { get => PlayerPrefs.GetInt(AutoPushEnabledKey, 0) == 1; set => PlayerPrefs.SetInt(AutoPushEnabledKey, value ? 1 : 0); }
+  public static string PushRemoteName { get => PlayerPrefs.GetString(RemoteNameKey, "origin"); set => PlayerPrefs.SetString(RemoteNameKey, value); }
 
   public static bool IsTriggerActionEnabled(string actionPrefKey)
   {
     // Ensure actionPrefKey is not null or empty before creating the full key
     if (string.IsNullOrEmpty(actionPrefKey)) return false;
-    return EditorPrefs.GetBool(TriggerActionEnabledKeyPrefix + actionPrefKey, false); // Default to false if not set
+    return PlayerPrefs.GetInt(TriggerActionEnabledKeyPrefix + actionPrefKey, 0) == 1;
   }
 
   public static string GetTriggerActionTemplate(string actionTemplateKey, string defaultTemplate)
   {
     // Ensure actionTemplateKey is not null or empty
     if (string.IsNullOrEmpty(actionTemplateKey)) return defaultTemplate;
-    return EditorPrefs.GetString(TriggerActionTemplateKeyPrefix + actionTemplateKey, defaultTemplate);
+    return PlayerPrefs.GetString(TriggerActionTemplateKeyPrefix + actionTemplateKey, defaultTemplate);
   }
 
 
@@ -38,7 +38,7 @@ public static class GitToolSettings
   {
     // Ensure actionPrefKey is not null or empty
     if (string.IsNullOrEmpty(actionPrefKey)) return;
-    EditorPrefs.SetBool(TriggerActionEnabledKeyPrefix + actionPrefKey, isEnabled);
+    PlayerPrefs.SetInt(TriggerActionEnabledKeyPrefix + actionPrefKey, isEnabled ? 1 : 0);
   }
   public static string GetTriggerActionTemplateKey(string actionTemplateKey)
   {
@@ -48,6 +48,6 @@ public static class GitToolSettings
   {
     // Ensure actionTemplateKey is not null or empty
     if (string.IsNullOrEmpty(actionTemplateKey)) return;
-    EditorPrefs.SetString(TriggerActionTemplateKeyPrefix + actionTemplateKey, template);
+    PlayerPrefs.SetString(TriggerActionTemplateKeyPrefix + actionTemplateKey, template);
   }
 }

@@ -20,7 +20,7 @@ public class OnSceneSavedHandler
     EditorApplication.delayCall += () =>
     {
       // Use the PreferenceKey from the found action
-      if (SceneSaveAction != null && EditorPrefs.GetBool(SceneSaveAction.GetEnabledEditorPrefsKey(), false))
+      if (SceneSaveAction != null && PlayerPrefs.GetInt(SceneSaveAction.GetEnabledPlayerPrefsKey(), 0) == 1)
       {
         EditorSceneManager.sceneSaved += OnSceneSaved;
       }
@@ -40,7 +40,7 @@ public class OnSceneSavedHandler
       return;
     }
     // Check if this specific action is enabled (redundant check if subscription logic is correct, but safe)
-    if (!EditorPrefs.GetBool(SceneSaveAction.GetEnabledEditorPrefsKey(), false))
+    if (PlayerPrefs.GetInt(SceneSaveAction.GetEnabledPlayerPrefsKey(), 0) != 1)
     {
       // This should ideally not happen if the event subscription is managed correctly
       Debug.LogWarning("Git Tool: OnSceneSaved called but the action is disabled in settings.");

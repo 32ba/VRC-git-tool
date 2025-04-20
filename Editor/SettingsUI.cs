@@ -115,25 +115,25 @@ public class GitToolSettingsUI : EditorWindow
 
         EditorGUI.BeginChangeCheck();
         // Use the action's properties directly
-        bool isEnabled = EditorPrefs.GetBool(action.GetEnabledEditorPrefsKey(), false); // Default to false
+        bool isEnabled = PlayerPrefs.GetInt(action.GetEnabledPlayerPrefsKey(), 0) == 1;
         isEnabled = EditorGUILayout.Toggle(action.ActionName, isEnabled);
         if (EditorGUI.EndChangeCheck())
         {
-          // Save change directly to EditorPrefs using the action's key
-          EditorPrefs.SetBool(action.GetEnabledEditorPrefsKey(), isEnabled);
+          // Save change directly to PlayerPrefs using the action's key
+          PlayerPrefs.SetInt(action.GetEnabledPlayerPrefsKey(), isEnabled ? 1 : 0);
         }
 
         // Show template field only if the action is enabled
-        if (EditorPrefs.GetBool(action.GetEnabledEditorPrefsKey(), false))
+        if (PlayerPrefs.GetInt(action.GetEnabledPlayerPrefsKey(), 0) == 1)
         {
           EditorGUI.BeginChangeCheck();
-          // Get the template from EditorPrefs
-          string template = EditorPrefs.GetString(action.GetTemplateEditorPrefsKey(), action.DefaultTemplate);
+          // Get the template from PlayerPrefs
+          string template = PlayerPrefs.GetString(action.GetTemplatePlayerPrefsKey(), action.DefaultTemplate);
           template = EditorGUILayout.TextField("Commit message template", template);
           if (EditorGUI.EndChangeCheck())
           {
-            // Save the template to EditorPrefs
-            EditorPrefs.SetString(action.GetTemplateEditorPrefsKey(), template);
+            // Save the template to PlayerPrefs
+            PlayerPrefs.SetString(action.GetTemplatePlayerPrefsKey(), template);
           }
         }
         GUILayout.Space(5);
