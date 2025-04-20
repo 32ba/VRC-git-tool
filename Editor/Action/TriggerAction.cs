@@ -8,17 +8,21 @@ public class TriggerAction
 {
     public static List<TriggerActionDefinition> Actions = new()
     {
-        CreateDefaultAction("On Scene Save", "GitTool_TriggerOnSceneSave", "GitTool_SceneSaveMessageTemplate", "Auto-commit: Scene saved - {sceneName}"),
-        CreateDefaultAction("On Build Complete", "GitTool_TriggerOnBuildComplete", "GitTool_BuildCompleteMessageTemplate", "Auto-commit: Build completed")
+        new TriggerActionDefinition
+        {
+            ActionId = "on_scene_save",
+            ActionName = "On Scene Save",
+            PreferenceKey = "GitTool_TriggerOnSceneSave",
+            TemplatePreferenceKey = "GitTool_SceneSaveMessageTemplate",
+            DefaultTemplate = "Auto-commit: Scene saved - {sceneName}"
+        },
+        new TriggerActionDefinition
+        {
+            ActionId = "on_build_complete",
+            ActionName = "On Build Complete",
+            PreferenceKey = "GitTool_TriggerOnBuildComplete",
+            TemplatePreferenceKey = "GitTool_BuildCompleteMessageTemplate",
+            DefaultTemplate = "Auto-commit: Build completed at {time}"
+        },
     };
-
-    private static TriggerActionDefinition CreateDefaultAction(string name, string prefKey, string templateKey, string defaultTemplate)
-    {
-        TriggerActionDefinition action = ScriptableObject.CreateInstance<TriggerActionDefinition>();
-        action.ActionName = name;
-        action.PreferenceKey = prefKey;
-        action.TemplatePreferenceKey = templateKey;
-        action.DefaultTemplate = defaultTemplate;
-        return action;
-    }
 }

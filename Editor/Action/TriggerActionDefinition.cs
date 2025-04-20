@@ -2,20 +2,13 @@ using UnityEngine;
 
 namespace GitTool.Editor.Action
 {
-  public class TriggerActionDefinition : ScriptableObject
+  public class TriggerActionDefinition
   {
-    [Tooltip("The display name of the action shown in the settings UI.")]
-    public string ActionName = "New Action";
-
-    [Tooltip("The key used to store the enabled state in EditorPrefs. Should be unique.")]
-    public string PreferenceKey = "GitTool_TriggerActionEnabled_NewAction";
-
-    [Tooltip("The key used to store the commit message template in EditorPrefs. Should be unique.")]
-    public string TemplatePreferenceKey = "GitTool_TriggerActionTemplate_NewAction";
-
-    [Tooltip("The default commit message template used if none is set.")]
-    [TextArea]
-    public string DefaultTemplate = "Auto-commit: {action}";
+    public string ActionId; // Unique identifier for the action, can be used for serialization or reference
+    public string ActionName; // Display name for the action, shown in the UI
+    public string PreferenceKey; // Key used to store the enabled state in EditorPrefs
+    public string TemplatePreferenceKey; // Key for the commit message template in EditorPrefs
+    public string DefaultTemplate; // Default template for commit messages
 
     // Helper methods to get the full EditorPrefs keys (optional but convenient)
     public string GetEnabledEditorPrefsKey() => PreferenceKey;

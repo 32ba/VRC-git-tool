@@ -13,7 +13,7 @@ using GitTool.Editor.Action; // Add this line
 public class OnSceneSavedHandler
 {
   // Find the specific action for scene save
-  private static TriggerActionDefinition SceneSaveAction = TriggerAction.Actions.FirstOrDefault(a => a.ActionName == "On Scene Save");
+  private static TriggerActionDefinition SceneSaveAction = TriggerAction.Actions.FirstOrDefault(a => a.ActionId == "on_scene_save");
 
   static OnSceneSavedHandler()
   {
